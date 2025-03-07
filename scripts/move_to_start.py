@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 # =================================================================
 # file name:    move_to_start.py
 # description:  move fr3 to default start pose

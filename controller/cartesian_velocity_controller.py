@@ -16,27 +16,28 @@ logging.basicConfig(level=logging.INFO)
 
 class CartesianVelocityController():
 
-  def __init__(self, arm: panda_py.Panda, home=True, frameEE = True):
+  def __init__(self, arm: panda_py.Panda, home:bool=True, frameEE:bool=True):
     self.frameEE = frameEE
     self.arm = arm
     if home:
       self.arm.move_to_start()
 
     self.controller = controllers.IntegratedVelocity()
+    self.isActive = True
     self.start_controller()
     print('initialization complete.')
     print(f'current ee pose:\n{SE3(self.arm.get_pose(), check=False)}')
 
   def start_controller(self):
     self.arm.start_controller(self.controller)
-    self.controllerStatus = True
+    self.isActive = True
 
   def stop_controller(self):
-    self.arm.stop_controller(self.controller)
-    self.controllerStatus = False
+    self.arm.stop_controller()
+    self.isActive = False
 
   def get_controller_status(self):
-    return self.controllerStatus
+    return self.isActive
 
   def get_body_jacobian(self) -> np.ndarray:
     model = self.arm.get_model()
@@ -55,6 +56,12 @@ class CartesianVelocityController():
                               F_T_EE=self.arm.get_state().F_T_EE)
     J_z = np.array(J_z).reshape(7, 6).T
     return J_z
+
+  def set_stiffness(self):
+    ...
+
+  def set_damping(self):
+    ...
 
   def onUpdate(self, twist_cmd: np.ndarray) -> None:
     if self.frameEE:
