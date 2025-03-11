@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import time
+
 import numpy as np
 import rospy
 import actionlib
@@ -27,7 +29,7 @@ def move_to_pose_client(T_d:SE3):
 
   goal = MoveToPoseGoal()
   goal.pose_goal = SE3ToPoseStamped(T_d)
-  print(f'sending goal pose: {goal.pose_goal}')
+  print(f'sending goal pose: \n{goal.pose_goal.pose}')
 
   client.send_goal(goal)
   result = client.wait_for_result()
@@ -39,6 +41,8 @@ if __name__ == '__main__':
   
   result = move_to_pose_client(T_d=T_d1)
   print(f'succeeded: {result}')
+
+  time.sleep(1.0)
 
   result = move_to_pose_client(T_d=T_d2)
   print(f'succeeded: {result}')

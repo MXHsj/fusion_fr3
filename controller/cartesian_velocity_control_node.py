@@ -6,6 +6,7 @@
 # date:         2025-03-05
 # =================================================================
 import sys
+from time import time
 
 import numpy as np
 import panda_py
@@ -21,9 +22,9 @@ class CartesianVelocityControlNode():
   # - implement parameter updater
 
   def __init__(self, arm: panda_py.Panda, home:bool=False, frameEE:bool=True, rate:int=100):
-    rospy.init_node('cartesian_velocity_control_node')
 
     self.twist_cmd = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])   # [linear, angular]
+    self.twist_cmd_last = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     self.cartesian_velocity_subscriber = rospy.Subscriber('fr3/Cartesian/velocity', TwistStamped, self.cartesian_velocity_cb)
 
     self.rate = rospy.Rate(rate)
@@ -31,10 +32,10 @@ class CartesianVelocityControlNode():
                                                   home=home, 
                                                   frameEE=frameEE)
 
-  def start_control(self):
+  def start_controller(self):
     self.controller.start_controller()
 
-  def stop_control(self):
+  def stop_controller(self):
     self.controller.stop_controller()
 
   def cartesian_velocity_cb(self, msg:TwistStamped) -> None:
@@ -45,15 +46,17 @@ class CartesianVelocityControlNode():
     self.twist_cmd[3] = msg.twist.angular.x
     self.twist_cmd[4] = msg.twist.angular.y
     self.twist_cmd[5] = msg.twist.angular.z
+    self.twist_cmd_last = self.twist_cmd.copy()
 
   def reset_twist(self) -> None:
     self.twist_cmd = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])   # [linear, angular]
 
   def onUpdate(self) -> None:
     try:
+      print(f'cartesian_velocity_control_node onUpdate')
       while not rospy.is_shutdown():
         self.controller.onUpdate(twist_cmd=self.twist_cmd)
-
+        
         self.rate.sleep()
 
     finally:
@@ -75,6 +78,7 @@ if __name__ == '__main__':
     raise RuntimeError(f'Usage: python {sys.argv[0]} <robot-hostname>')
   fr3 = panda_py.Panda(robot_ip)
 
+  rospy.init_node('cartesian_velocity_control_node')
   control_node = CartesianVelocityControlNode(arm=fr3, 
                                               home=True, 
                                               frameEE=True, 

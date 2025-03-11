@@ -23,7 +23,7 @@ class CartesianPoseController():
     self.pos_err_tol = 0.005
     self.ang_err_tol = 0.01
     self.isArrived = False
-    self.rate = 100
+    self.rate = rate
 
     self.arm = arm
     self.controller = CartesianVelocityController(arm=arm, 
@@ -98,7 +98,7 @@ class CartesianPoseController():
     return twist_cmd, isArrived
 
   def goto(self, pose_goal: SE3):
-    print('========== moved pose goal ==========')
+    print('========== move to pose goal ==========')
     print(f'goal pose: \n{pose_goal}')
     with self.arm.create_context(frequency=self.rate) as ctx:
       while ctx.ok():
@@ -137,5 +137,6 @@ if __name__ == '__main__':
                   [0.0, 0.0, 0.0, 1.0]])
   T_d2 = SE3(T_d2, check=True)
 
+  input('press enter to execute motion')
   controller.goto(pose_goal=T_d2)
   

@@ -25,9 +25,9 @@ class CartesianVelocityController():
     self.controller = controllers.IntegratedVelocity()
     self.isActive = True
     self.start_controller()
-    print('initialization complete.')
-    print(f'current ee pose:\n{SE3(self.arm.get_pose(), check=False)}')
-
+    # print('initialization complete.')
+    # print(f'current ee pose:\n{SE3(self.arm.get_pose(), check=False)}')
+    
   def start_controller(self):
     self.arm.start_controller(self.controller)
     self.isActive = True
@@ -95,6 +95,6 @@ if __name__ == '__main__':
   cart_velocity = np.concatenate((lin_velocity, ang_velocity))
   
   input('press enter to execute motion')
-  with fr3.create_context(frequency=100) as ctx:
+  with fr3.create_context(frequency=500) as ctx:
     while ctx.ok():
       controller.onUpdate(twist_cmd=cart_velocity)
