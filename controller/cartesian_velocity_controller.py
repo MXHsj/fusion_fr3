@@ -73,6 +73,9 @@ class CartesianVelocityController():
     self.controller.set_control(dq)
 
 if __name__ == '__main__':
+  
+  # TODO: move to unit test
+  
   default_ip = '172.16.0.2'
 
   if len(sys.argv) == 1:

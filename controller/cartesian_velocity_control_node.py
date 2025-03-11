@@ -17,6 +17,9 @@ from controller.cartesian_velocity_controller import CartesianVelocityController
 
 class CartesianVelocityControlNode():
 
+  # TODO: 
+  # - implement parameter updater
+
   def __init__(self, arm: panda_py.Panda, home:bool=False, frameEE:bool=True, rate:int=100):
     rospy.init_node('cartesian_velocity_control_node')
 
@@ -28,6 +31,11 @@ class CartesianVelocityControlNode():
                                                   home=home, 
                                                   frameEE=frameEE)
 
+  def start_control(self):
+    self.controller.start_controller()
+
+  def stop_control(self):
+    self.controller.stop_controller()
 
   def cartesian_velocity_cb(self, msg:TwistStamped) -> None:
     # TODO: use frame_id to determine space/body twist

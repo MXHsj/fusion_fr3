@@ -1,0 +1,10 @@
+# Goal definition
+geometry_msgs/PoseStamped pose_goal
+---
+# Result definition
+bool success
+string message
+---
+# Feedback definition
+geometry_msgs/PoseStamped current_pose
+float32 progress  # 0.0 to 1.0

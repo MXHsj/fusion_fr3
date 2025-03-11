@@ -29,9 +29,18 @@ class CartesianPoseController():
     self.controller = CartesianVelocityController(arm=arm, 
                                                   home=False, 
                                                   frameEE=False)  # use zero jacobian
+    self.isActive = True
+    
+  def start_controller(self):
+    self.controller.start_controller()
+    self.isActive = True
+
+  def stop_controller(self):
+    self.controller.stop_controller()
+    self.isActive = False
 
   def get_gain(self):
-    ...
+    return self.Kp_pos, self.Kp_ori
 
   def set_gain(self, Kp_pos:float, Kp_ori:float) -> None:
     if Kp_pos > Kp_ori_max or Kp_ori > Kp_ori_max:
@@ -40,19 +49,19 @@ class CartesianPoseController():
       self.Kp_pos = Kp_pos
       self.Kp_ori = Kp_ori
 
-  def get_pos_tol(self) -> float:
+  def get_pos_tolerance(self) -> float:
     return self.pos_err_tol
 
-  def get_ang_tol(self) -> float:
+  def get_ang_tolerance(self) -> float:
     return self.ang_err_tol
 
-  def set_pos_tol(self, pos_err_tol:float) -> None:
+  def set_pos_tolerance(self, pos_err_tol:float) -> None:
     if pos_err_tol <= 0:
       print('invalid position tolerence')
     else:
       self.pos_err_tol = pos_err_tol
 
-  def set_pos_tol(self, ang_err_tol:float) -> None:
+  def set_pos_tolerance(self, ang_err_tol:float) -> None:
     if ang_err_tol <= 0:
       print('invalid position tolerence')
     else:
