@@ -5,6 +5,7 @@
 # date:         2025-03-05
 # =================================================================
 import sys
+import threading 
 
 import numpy as np
 import panda_py
@@ -17,7 +18,7 @@ Kp_ori_max = 1.0
 
 class CartesianPoseController():
   
-  def __init__(self, arm:panda_py.Panda, rate=100) -> None:
+  def __init__(self, arm:panda_py.Panda, rate=100, stop_event:threading.Event=None) -> None:
     self.Kp_pos = 0.65    # position Kp
     self.Kp_ori = 0.70    # orientation Kp
     self.pos_err_tol = 0.005

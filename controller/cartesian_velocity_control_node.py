@@ -6,7 +6,7 @@
 # date:         2025-03-05
 # =================================================================
 import sys
-from time import time
+import threading
 
 import numpy as np
 import panda_py
@@ -21,16 +21,25 @@ class CartesianVelocityControlNode():
   # TODO: 
   # - implement parameter updater
 
-  def __init__(self, arm: panda_py.Panda, home:bool=False, frameEE:bool=True, rate:int=100):
+  def __init__(self, arm:panda_py.Panda, 
+                     home:bool=False, 
+                     frameEE:bool=True, 
+                     rate:int=100, 
+                     stop_event:threading.Event=None):
 
     self.twist_cmd = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])   # [linear, angular]
     self.twist_cmd_last = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-    self.cartesian_velocity_subscriber = rospy.Subscriber('fr3/Cartesian/velocity', TwistStamped, self.cartesian_velocity_cb)
+    self.last_msg_time = None
+    self.msg_timeout = 1.0    #  [sec]
+    self.cartesian_velocity_subscriber = rospy.Subscriber('fr3/controller/Cartesian/velocity', TwistStamped, self.cartesian_velocity_cb)
 
     self.rate = rospy.Rate(rate)
-    self.controller = CartesianVelocityController(arm=arm, 
-                                                  home=home, 
+
+    self.controller = CartesianVelocityController(arm=arm,
+                                                  home=home,
                                                   frameEE=frameEE)
+
+    self.stop_event = stop_event
 
   def start_controller(self):
     self.controller.start_controller()
@@ -47,6 +56,7 @@ class CartesianVelocityControlNode():
     self.twist_cmd[4] = msg.twist.angular.y
     self.twist_cmd[5] = msg.twist.angular.z
     self.twist_cmd_last = self.twist_cmd.copy()
+    self.last_msg_time = rospy.get_time()
 
   def reset_twist(self) -> None:
     self.twist_cmd = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])   # [linear, angular]
@@ -55,8 +65,16 @@ class CartesianVelocityControlNode():
     try:
       # print(f'cartesian_velocity_control_node onUpdate')
       while not rospy.is_shutdown():
+        current_time = rospy.get_time()
+        elapsed = current_time - self.last_msg_time if self.last_msg_time else float('inf')
+        # print(f'current: {current_time}, last: {self.last_msg_time}, elaped: {elapsed}')
+        if elapsed >= self.msg_timeout:
+          self.reset_twist()
         self.controller.onUpdate(twist_cmd=self.twist_cmd)
-        # TODO: implement velocity ramp down
+
+        if self.stop_event is not None:
+          if self.stop_event.is_set():
+            break
         self.rate.sleep()
 
     finally:

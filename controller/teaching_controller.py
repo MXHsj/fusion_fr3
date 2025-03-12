@@ -38,6 +38,7 @@ class TeachingController():
 
   def record_pos(self) -> None:
     self.pos_queue.append(self.arm.q)
+    self.pos_count += 1
 
   def replay_pos(self) -> None:
     if len(self.pos_queue):
@@ -71,3 +72,4 @@ if __name__ == '__main__':
   fr3 = panda_py.Panda(robot_ip)
 
   controller = TeachingController(arm=fr3)
+  controller.onUpdate()

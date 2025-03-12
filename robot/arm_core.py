@@ -8,6 +8,7 @@
 import sys
 from copy import copy
 import threading
+from time import time
 
 import rospy
 import actionlib
@@ -17,7 +18,9 @@ from panda_py import controllers
 from spatialmath import SE3, UnitQuaternion
 
 from std_srvs.srv import Empty, SetBool, SetBoolResponse
+from std_msgs.msg import Float64MultiArray
 from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import WrenchStamped
 from fusion_fr3.msg import MoveToPoseAction, MoveToPoseGoal, MoveToPoseFeedback, MoveToPoseResult
 
 from controller.cartesian_velocity_control_node import CartesianVelocityControlNode
@@ -55,7 +58,7 @@ class Arm():
                     default_controller:str="cartesian_velocity",
                     rt:bool=False,
                     rate:int=100) -> None:
-
+    
     # ensure singleton
     if self._initialized:
       return
@@ -75,21 +78,30 @@ class Arm():
     # ===================================
 
     # ========== start default controller ==========
+    self.stop_event = threading.Event()
     self.default_controller = default_controller
     self.current_controller = copy(self.default_controller)
     print(f'using controller: {default_controller}')
-    self.controller = controllers[default_controller](arm=self.arm)
+    self.controller = controllers[default_controller](arm=self.arm, stop_event=self.stop_event)
     # ==============================================
 
     # ========== move_to_pose server ==========
     self.pose_server = actionlib.SimpleActionServer(
-      'fr3/Cartesian/pose',
+      'fr3/controller/Cartesian/pose',
       MoveToPoseAction,
       execute_cb=self.pose_execute_cb,
       auto_start=False
     )
     self.pose_server.start()
     # =========================================
+
+    # ========== ROS topics ==========
+    self.state_publisher_rate = 100
+    self.F_ext_publisher = rospy.Publisher('fr3/state/F_ext', WrenchStamped, queue_size=1)
+    self.O_T_EE_publisher = rospy.Publisher('fr3/state/O_T_EE', Float64MultiArray, queue_size=1)
+    self.q_publisher = rospy.Publisher('fr3/state/q', Float64MultiArray, queue_size=1)
+    self.state_timer = rospy.Timer(rospy.Duration(1/self.state_publisher_rate), self.arm_state_publisher)
+    # ================================
 
     # ========== start background thread ==========
     self.rate = rospy.Rate(rate)
@@ -106,19 +118,21 @@ class Arm():
   def set_load(self):
     ...
 
-  def switch_controller(self, new_controller_name:str):
+  def switch_controller(self, new_controller_name:str) -> None:
     print(f'switching from {self.current_controller} to {new_controller_name} controller')
+    self.stop_event.set()
     if self.run_thread.is_alive():
       self.run_thread.join(timeout=1)
+    self.stop_event.clear()
 
     self.controller.stop_controller()
-    self.controller = controllers[new_controller_name](arm=self.arm)
+    self.controller = controllers[new_controller_name](arm=self.arm, stop_event=self.stop_event)
     self.current_controller = new_controller_name
 
     self.run_thread = threading.Thread(target=self.run, daemon=True)
     self.run_thread.start()
   
-  def pose_execute_cb(self, goal:MoveToPoseGoal):
+  def pose_execute_cb(self, goal:MoveToPoseGoal) -> None:
     success = True
     try:
       self.switch_controller('cartesian_pose')
@@ -137,7 +151,26 @@ class Arm():
       print(str(e))
       self.pose_server.set_aborted(result=result)
 
-  def run(self):
+  def arm_state_publisher(self, event=None) -> None:
+    # ===== ee pose =====
+    O_T_EE_msg = Float64MultiArray(data=self.arm.get_pose().flatten())
+    self.O_T_EE_publisher.publish(O_T_EE_msg)
+    # ===== external wrench w.r.t ee frame =====
+    F_ext_msg = WrenchStamped()
+    F_ext_msg.header.frame_id = 'ee'
+    F_ext_msg.header.stamp = rospy.Time().now()
+    F_ext_msg.wrench.force.x = self.arm.get_state().K_F_ext_hat_K[0]
+    F_ext_msg.wrench.force.y = self.arm.get_state().K_F_ext_hat_K[1]
+    F_ext_msg.wrench.force.z = self.arm.get_state().K_F_ext_hat_K[2]
+    F_ext_msg.wrench.torque.x = self.arm.get_state().K_F_ext_hat_K[3]
+    F_ext_msg.wrench.torque.y = self.arm.get_state().K_F_ext_hat_K[4]
+    F_ext_msg.wrench.torque.z = self.arm.get_state().K_F_ext_hat_K[5]
+    self.F_ext_publisher.publish(F_ext_msg)
+    # ===== joint angle =====
+    q_msg = Float64MultiArray(data=self.arm.get_state().q)
+    self.q_publisher.publish(q_msg)
+
+  def run(self) -> None:
     self.controller.onUpdate()
     # pass
 
