@@ -107,7 +107,11 @@ class CartesianPoseController():
         if isArrived:
           print('arrived!')
           break
-
+  
+  def onUpdate(self):
+    # TODO: implement controller template
+    # to be called arm_core
+    pass
 
 if __name__ == '__main__':
 

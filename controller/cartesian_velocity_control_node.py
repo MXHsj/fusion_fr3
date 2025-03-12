@@ -53,10 +53,10 @@ class CartesianVelocityControlNode():
 
   def onUpdate(self) -> None:
     try:
-      print(f'cartesian_velocity_control_node onUpdate')
+      # print(f'cartesian_velocity_control_node onUpdate')
       while not rospy.is_shutdown():
         self.controller.onUpdate(twist_cmd=self.twist_cmd)
-        
+        # TODO: implement velocity ramp down
         self.rate.sleep()
 
     finally:

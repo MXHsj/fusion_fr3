@@ -7,6 +7,7 @@
 # =================================================================
 import sys
 from copy import copy
+import threading
 
 import rospy
 import actionlib
@@ -42,10 +43,23 @@ class Arm():
   # - implement controller switch service
   # - implement move to start service
 
+  _instance = None
+
+  def __new__(cls, *args, **kwargs):
+    if cls._instance is None:
+      cls._instance = super(Arm, cls).__new__(cls)
+      cls._instance._initialized = False
+    return cls._instance
+
   def __init__(self,ip:str=default_ip,
                     default_controller:str="cartesian_velocity",
                     rt:bool=False,
-                    rate:int=500) -> None:
+                    rate:int=100) -> None:
+
+    # ensure singleton
+    if self._initialized:
+      return
+    self._initialzed = True
 
     rospy.init_node('arm_core', anonymous=True)
 
@@ -77,8 +91,11 @@ class Arm():
     self.pose_server.start()
     # =========================================
 
-    self.post_completion_callback = self.run
+    # ========== start background thread ==========
     self.rate = rospy.Rate(rate)
+    self.run_thread = threading.Thread(target=self.run, daemon=True)
+    self.run_thread.start()
+    # =============================================
 
   def get_rt_config(self):
     return self.rt_config
@@ -91,10 +108,15 @@ class Arm():
 
   def switch_controller(self, new_controller_name:str):
     print(f'switching from {self.current_controller} to {new_controller_name} controller')
+    if self.run_thread.is_alive():
+      self.run_thread.join(timeout=1)
+
     self.controller.stop_controller()
     self.controller = controllers[new_controller_name](arm=self.arm)
     self.current_controller = new_controller_name
-    self.controller.start_controller()
+
+    self.run_thread = threading.Thread(target=self.run, daemon=True)
+    self.run_thread.start()
   
   def pose_execute_cb(self, goal:MoveToPoseGoal):
     success = True
@@ -107,7 +129,6 @@ class Arm():
       
       self.pose_server.set_succeeded(MoveToPoseResult(success=0 if success else 1))
       self.switch_controller(self.default_controller)
-      self.post_completion_callback()
       
     except Exception as e:
       result = MoveToPoseResult()
@@ -117,12 +138,10 @@ class Arm():
       self.pose_server.set_aborted(result=result)
 
   def run(self):
-    # while not rospy.is_shutdown():
-      
     self.controller.onUpdate()
-    # self.rate.sleep()
+    # pass
 
 if __name__ == '__main__':
 
   arm = Arm()  
-  arm.run()
+  rospy.spin()
