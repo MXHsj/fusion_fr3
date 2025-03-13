@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<launch>
+  <node name="arm_core" pkg="fusion_fr3" type="arm_core.py" output="screen" /> 
+
+</launch>
