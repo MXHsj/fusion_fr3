@@ -24,7 +24,7 @@ T_d2 = np.array([[1.0, 0.0, 0.0, 0.35],
 T_d2 = SE3(T_d2, check=True)
 
 def move_to_pose_client(T_d:SE3):
-  client = actionlib.SimpleActionClient('fr3/Cartesian/pose', MoveToPoseAction)
+  client = actionlib.SimpleActionClient('fr3/action/move_to_pose', MoveToPoseAction)
   client.wait_for_server()
 
   goal = MoveToPoseGoal()

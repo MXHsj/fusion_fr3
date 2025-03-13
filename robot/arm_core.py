@@ -17,7 +17,7 @@ import panda_py
 from panda_py import controllers
 from spatialmath import SE3, UnitQuaternion
 
-from std_srvs.srv import Empty, SetBool, SetBoolResponse
+from std_srvs.srv import Trigger, TriggerResponse
 from std_msgs.msg import Float64MultiArray
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import WrenchStamped
@@ -42,27 +42,25 @@ controllers = {
 
 class Arm():
 
-  # TODO:
-  # - implement controller switch service
-  # - implement move to start service
-
   _instance = None
+  _initialized = False
 
   def __new__(cls, *args, **kwargs):
     if cls._instance is None:
       cls._instance = super(Arm, cls).__new__(cls)
-      cls._instance._initialized = False
     return cls._instance
 
   def __init__(self,ip:str=default_ip,
                     default_controller:str="cartesian_velocity",
                     rt:bool=False,
                     rate:int=100) -> None:
-    
-    # ensure singleton
+
+    # ensure singleton in a single process 
     if self._initialized:
+      print('instance already exists, skip initialization')
       return
-    self._initialzed = True
+
+    self._initialized = True
 
     rospy.init_node('arm_core', anonymous=True)
 
@@ -85,15 +83,19 @@ class Arm():
     self.controller = controllers[default_controller](arm=self.arm, stop_event=self.stop_event)
     # ==============================================
 
-    # ========== move_to_pose server ==========
+    # ========== ROS actions ==========
     self.pose_server = actionlib.SimpleActionServer(
-      'fr3/controller/Cartesian/pose',
+      'fr3/action/move_to_pose',
       MoveToPoseAction,
       execute_cb=self.pose_execute_cb,
       auto_start=False
     )
     self.pose_server.start()
-    # =========================================
+    # =================================
+
+    # ========== ROS services ==========
+    rospy.Service('fr3/service/move_to_start', Trigger, self.move_to_start)
+    # ==================================
 
     # ========== ROS topics ==========
     self.state_publisher_rate = 100
@@ -132,6 +134,12 @@ class Arm():
     self.run_thread = threading.Thread(target=self.run, daemon=True)
     self.run_thread.start()
   
+  def move_to_start(self, req):
+    self.arm.move_to_start()
+    success = True
+    message = 'moved to start position'
+    return TriggerResponse(success, message)
+
   def pose_execute_cb(self, goal:MoveToPoseGoal) -> None:
     success = True
     try:

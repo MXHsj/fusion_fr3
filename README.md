@@ -83,9 +83,9 @@ roslaunch fusion_fr3 robot_bringup.launch
 ### 2. ROS Actions
 | name | description |
 | :---: | :---: |
-| ```fr3/controller/Cartesian/pose``` | move ee to a pose goal |
+| ```fr3/action/move_to_pose``` | move ee to a pose goal |
 
 ### 3. ROS Services
 | name | description |
 | :---: | :---: |
-| ```fr3/move_to_start``` | move to start configuration |
+| ```fr3/service/move_to_start``` | move to start configuration |
