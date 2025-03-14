@@ -44,7 +44,7 @@ pip install panda_python-0.8.1+libfranka.0.13.0-*python version*-manylinux_2_17_
 
 ```shell
 pip3 install numpy
-pip3 install spatialmath
+pip3 install spatialmath-python
 pip3 install qpsolvers
 ```
 
