@@ -170,6 +170,7 @@ catkin_install_python(PROGRAMS
   controller/cartesian_velocity_control_node.py
   controller/cartesian_pose_control_node.py
   controller/cartesian_impedance_control_node.py
+  controller/joint_velocity_control_node.py
   robot/arm_core.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

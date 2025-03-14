@@ -8,7 +8,6 @@
 import sys
 from copy import copy
 import threading
-from time import time
 
 import rospy
 import actionlib
@@ -27,6 +26,7 @@ from controller.cartesian_velocity_control_node import CartesianVelocityControlN
 from controller.cartesian_pose_controller import CartesianPoseController
 from controller.cartesian_impedance_control_node import CartesianImpedanceControlNode
 from controller.teaching_control_node import TeachingControlNode
+from controller.joint_velocity_control_node import JointVelocityControlNode
 from controller.utils import PoseStampedToSE3
 
 default_ip = '172.16.0.2'
@@ -37,7 +37,8 @@ controllers = {
   "cartesian_velocity"    : CartesianVelocityControlNode,
   "cartesian_pose"        : CartesianPoseController,
   "cartesian_impedance"   : CartesianImpedanceControlNode,
-  "teaching"              : TeachingControlNode
+  "teaching"              : TeachingControlNode,
+  "joint_velocity"        : JointVelocityControlNode
 }
 
 class Arm():
@@ -102,6 +103,8 @@ class Arm():
     self.F_ext_publisher = rospy.Publisher('fr3/state/F_ext', WrenchStamped, queue_size=1)
     self.O_T_EE_publisher = rospy.Publisher('fr3/state/O_T_EE', Float64MultiArray, queue_size=1)
     self.q_publisher = rospy.Publisher('fr3/state/q', Float64MultiArray, queue_size=1)
+    self.J_body_publisher = rospy.Publisher('fr3/state/body_jacobian', Float64MultiArray, queue_size=1)
+    self.J_zero_publisher = rospy.Publisher('fr3/state/zero_jacobian', Float64MultiArray, queue_size=1)
     self.state_timer = rospy.Timer(rospy.Duration(1/self.state_publisher_rate), self.arm_state_publisher)
     # ================================
 
@@ -177,6 +180,20 @@ class Arm():
     # ===== joint angle =====
     q_msg = Float64MultiArray(data=self.arm.get_state().q)
     self.q_publisher.publish(q_msg)
+    # ===== jacobian =====
+    model = self.arm.get_model()
+    J_b = model.body_jacobian(frame=panda_py.libfranka.Frame.kEndEffector, 
+                              q=self.arm.q,
+                              EE_T_K=self.arm.get_state().EE_T_K, 
+                              F_T_EE=self.arm.get_state().F_T_EE)
+    J_z = model.zero_jacobian(frame=panda_py.libfranka.Frame.kEndEffector, 
+                              q=self.arm.q,
+                              EE_T_K=self.arm.get_state().EE_T_K, 
+                              F_T_EE=self.arm.get_state().F_T_EE)
+    J_b_msg = Float64MultiArray(data=np.array(J_b).flatten())
+    J_z_msg = Float64MultiArray(data=np.array(J_z).flatten())
+    self.J_body_publisher.publish(J_b_msg)
+    self.J_zero_publisher.publish(J_z_msg)
 
   def run(self) -> None:
     self.controller.onUpdate()

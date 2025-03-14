@@ -76,9 +76,12 @@ roslaunch fusion_fr3 robot_bringup.launch
 | name | description |
 | :---: | :---: |
 | ```fr3/controller/Cartesian/velocity``` | send Cartesian velocity command w.r.t ee frame  |
+| ```fr3/controller/joint/velocity``` | send joint velocity command |
 | ```fr3/state/F_ext``` | external wrench w.r.t ee frame  |
 | ```fr3/state/O_T_EE``` | ee pose w.r.t base frame |
 | ```fr3/state/q``` | joint angles |
+| ```fr3/state/body_jacobian``` | body Jacobian |
+| ```fr3/state/zero_jacobian``` | zero Jacobian |
 
 ### 2. ROS Actions
 | name | description |
