@@ -47,11 +47,11 @@ with panda.create_context(frequency=1000) as ctx:
     # ========== compute twist to align x-axis ==========
     n_cur_base = T_0[:3, 0]
     n_cur_base = n_cur_base / np.linalg.norm(n_cur_base)
-    e_n = np.dot(n_cur_base, n_des_base)
+    e_n = np.cross(n_cur_base, n_des_base)
 
     # print(f'normal vector error: {e_a}')
 
-    omega_n = -Kp2 * e_n * a_cur_base
+    omega_n = -Kp2 * np.dot(e_n, a_cur_base)
 
     # ========== control joint velocity ==========
     omega_total = omega_a + omega_n
