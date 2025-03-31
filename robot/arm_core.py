@@ -18,7 +18,6 @@ from spatialmath import SE3, UnitQuaternion
 
 from std_srvs.srv import Trigger, TriggerResponse
 from std_msgs.msg import Float64MultiArray
-from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import WrenchStamped
 from fusion_fr3.msg import MoveToPoseAction, MoveToPoseGoal, MoveToPoseFeedback, MoveToPoseResult
 
@@ -42,6 +41,7 @@ controllers = {
 }
 
 class Arm():
+  # TODO: fix rt-kernel threading issue
 
   _instance = None
   _initialized = False
@@ -54,7 +54,7 @@ class Arm():
   def __init__(self,ip:str=default_ip,
                     default_controller:str="cartesian_velocity",
                     rt:bool=False,
-                    rate:int=100) -> None:
+                    rate:int=200) -> None:
 
     # ensure singleton in a single process 
     if self._initialized:
@@ -201,5 +201,9 @@ class Arm():
 
 if __name__ == '__main__':
 
-  arm = Arm()  
+  default_controller = rospy.get_param('~default_controller', 'cartesian_velocity')
+
+  arm = Arm(default_controller=default_controller,
+            rt=False,
+            rate=200)
   rospy.spin()

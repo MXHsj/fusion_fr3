@@ -28,6 +28,16 @@ def avoid_cart_pose_constraints():
 def avoid_joint_pose_constraints():
   ...
 
+def damped_pseudo_inverse(J:np.ndarray, lambda_=0.01) -> np.ndarray:
+  J_T = J.T
+  _, n = J.shape
+  damping = (lambda_ ** 2) * np.eye(n)
+  return np.linalg.inv(J_T @ J + damping) @ J_T  # (JᵀJ + λ²I)⁻¹Jᵀ
+
+def svd_damped_pseudo_inverse(J:np.ndarray, lambda_=0.01) -> np.ndarray:
+  U, S, Vh = np.linalg.svd(J, full_matrices=False)
+  S_damped = S / (S**2 + lambda_**2)    # apply damping to singular values
+  return (Vh.T @ np.diag(S_damped) @ U.T)
 
 def PoseStampedToSE3(poseIn:PoseStamped) -> SE3:
   poseOut = SE3()

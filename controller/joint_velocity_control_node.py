@@ -27,7 +27,7 @@ class JointVelocityControlNode():
     self.joint_vel_cmd_last = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     self.last_msg_time = None
     self.msg_timeout = 1.0    #  [sec]
-    self.cartesian_velocity_subscriber = rospy.Subscriber('fr3/controller/joint/velocity', Float64MultiArray, self.joint_velocity_cb)
+    self.joint_velocity_subscriber = rospy.Subscriber('fr3/controller/joint/velocity', Float64MultiArray, self.joint_velocity_cb)
 
     self.rate = rospy.Rate(rate)
 

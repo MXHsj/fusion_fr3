@@ -31,7 +31,7 @@
 
 ### 0. dependencies
 ```FUSION_FR3``` is developed and tested on Ubuntu 20.04 and ROS Noetic.
-```libfranka``` is necessary. The installation guide can be found [here](https://github.com/frankaemika/libfranka/blob/main/README.md). Real-time kernel is optional.
+```libfranka``` is necessary. The installation guide can be found [here](https://github.com/frankaemika/libfranka/blob/main/README.md). **Real-time kernel is not needed.**
 
 ### 1. install panda-py
 ```FUSION_FR3``` is based on [```panda-py```](https://github.com/JeanElsner/panda-py), whose version needs to match ```libfranka``` version. 

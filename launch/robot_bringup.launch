@@ -1,7 +1,9 @@
 <?xml version="1.0"?>
 <launch>
-  <param name="cartesian_velocity" default="double" />
+  <arg name="default_controller" default="cartesian_velocity" />
 
-  <node name="arm_core" pkg="fusion_fr3" type="arm_core.py" output="screen" /> 
+  <node name="arm_core" pkg="fusion_fr3" type="arm_core.py" output="screen">
+    <param name="default_controller" value="$(arg default_controller)" />
+  </node>
 
 </launch>
