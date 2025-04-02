@@ -39,27 +39,30 @@ def svd_damped_pseudo_inverse(J:np.ndarray, lambda_=0.01) -> np.ndarray:
   S_damped = S / (S**2 + lambda_**2)    # apply damping to singular values
   return (Vh.T @ np.diag(S_damped) @ U.T)
 
-def PoseStampedToSE3(poseIn:PoseStamped) -> SE3:
-  poseOut = SE3()
-  poseOut.t[0] = poseIn.pose.position.x
-  poseOut.t[1] = poseIn.pose.position.y
-  poseOut.t[2] = poseIn.pose.position.z
-  quat = np.array([poseIn.pose.orientation.w,
-                   poseIn.pose.orientation.x,
-                   poseIn.pose.orientation.y,
-                   poseIn.pose.orientation.z])
+def PoseStampedToSE3(pose_in:PoseStamped) -> SE3:
+  pose_out_data = np.zeros((4,4), dtype=np.float64)
+  pose_out_data[0, -1] = pose_in.pose.position.x
+  pose_out_data[1, -1] = pose_in.pose.position.y
+  pose_out_data[2, -1] = pose_in.pose.position.z
+  quat = np.array([pose_in.pose.orientation.w,
+                   pose_in.pose.orientation.x,
+                   pose_in.pose.orientation.y,
+                   pose_in.pose.orientation.z])
   R = UnitQuaternion(quat).SO3()
-  poseOut.R = R
-  return poseOut
+  pose_out_data[:3, :3] = R.data[0]
+  pose_out = SE3(pose_out_data, check=False)
+  
+  return pose_out
 
-def SE3ToPoseStamped(poseIn:SE3) -> PoseStamped:
-  poseOut = PoseStamped()
-  poseOut.pose.position.x = poseIn.t[0]
-  poseOut.pose.position.y = poseIn.t[1]
-  poseOut.pose.position.z = poseIn.t[2]
-  poseOut.pose.orientation.w = SO3(poseIn.R).UnitQuaternion().data[0][0]
-  poseOut.pose.orientation.x = SO3(poseIn.R).UnitQuaternion().data[0][1]
-  poseOut.pose.orientation.y = SO3(poseIn.R).UnitQuaternion().data[0][2]
-  poseOut.pose.orientation.z = SO3(poseIn.R).UnitQuaternion().data[0][3]
+def SE3ToPoseStamped(pose_in:SE3) -> PoseStamped:
+  pose_out = PoseStamped()
+  pose_out.pose.position.x = pose_in.t[0]
+  pose_out.pose.position.y = pose_in.t[1]
+  pose_out.pose.position.z = pose_in.t[2]
 
-  return poseOut
+  pose_out.pose.orientation.w = UnitQuaternion(pose_in.R).data[0][0]
+  pose_out.pose.orientation.x = UnitQuaternion(pose_in.R).data[0][1]
+  pose_out.pose.orientation.y = UnitQuaternion(pose_in.R).data[0][2]
+  pose_out.pose.orientation.z = UnitQuaternion(pose_in.R).data[0][3]
+
+  return pose_out

@@ -159,7 +159,7 @@ class Arm():
       result = MoveToPoseResult()
       result.success = False
       result.message = str(e)
-      print(str(e))
+      print('move to pose server error: '+str(e))
       self.pose_server.set_aborted(result=result)
 
   def arm_state_publisher(self, event=None) -> None:

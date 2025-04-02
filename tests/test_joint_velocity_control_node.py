@@ -9,7 +9,7 @@ if __name__ == '__main__':
   joint_vel_pub = rospy.Publisher('fr3/controller/joint/velocity', Float64MultiArray, queue_size=1)
 
   rate = rospy.Rate(50)
-  joint_vel_cmd = np.array([0.0, -0.01, 0.0, 0.0, 0.0, 0.0, 0.0])
+  joint_vel_cmd = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.02])
 
   while not rospy.is_shutdown():
     joint_vel_cmd_msg = Float64MultiArray()

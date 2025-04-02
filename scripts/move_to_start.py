@@ -6,6 +6,7 @@
 # date:         2025-03-05
 # =================================================================
 import sys
+import numpy as np
 
 import panda_py
 from spatialmath import SE3
@@ -25,4 +26,4 @@ if __name__ == '__main__':
   panda.move_to_start()
   
   print('========== moved to start pose ==========')
-  print(SE3(panda.get_pose()))
+  print(SE3(panda.get_pose(), check=False))

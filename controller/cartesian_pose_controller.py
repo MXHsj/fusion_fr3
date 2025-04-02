@@ -70,7 +70,7 @@ class CartesianPoseController():
 
   def compute_cartesian_velocity(self, pose_goal: SE3):
     isArrived = False
-    pose_curr = SE3(self.arm.get_pose())
+    pose_curr = SE3(self.arm.get_pose(), check=False)
 
     p_curr = pose_curr.t  # (3x1)
     p_goal = pose_goal.t  # (3x1)
@@ -81,7 +81,7 @@ class CartesianPoseController():
     pos_err = p_goal - p_curr  # (3,)
 
     R_err = R_goal @ R_curr.T  # Relative rotation
-    rpy_err = SO3(R_err).rpy()
+    rpy_err = SO3(R_err, check=False).rpy()
 
     vel_lin = self.Kp_pos * pos_err
     vel_ang = self.Kp_ori * rpy_err
