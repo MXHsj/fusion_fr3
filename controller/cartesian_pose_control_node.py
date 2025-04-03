@@ -54,6 +54,7 @@ class CartesianPoseControlNode():
       result = MoveToPoseResult()
       result.success = False
       result.message = str(e)
+      rospy.logerr('move to pose server error: '+str(e))
       self.pose_server.set_aborted(result=result)
 
 if __name__ == '__main__':

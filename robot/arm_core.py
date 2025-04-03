@@ -124,7 +124,7 @@ class Arm():
     ...
 
   def switch_controller(self, new_controller_name:str) -> None:
-    print(f'switching from {self.current_controller} to {new_controller_name} controller')
+    rospy.loginfo(f'switching from {self.current_controller} to {new_controller_name} controller')
     self.stop_event.set()
     if self.run_thread.is_alive():
       self.run_thread.join(timeout=1)
@@ -159,7 +159,7 @@ class Arm():
       result = MoveToPoseResult()
       result.success = False
       result.message = str(e)
-      print('move to pose server error: '+str(e))
+      rospy.logerr('move to pose server error: '+str(e))
       self.pose_server.set_aborted(result=result)
 
   def arm_state_publisher(self, event=None) -> None:

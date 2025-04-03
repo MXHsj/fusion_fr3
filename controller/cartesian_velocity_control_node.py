@@ -81,7 +81,7 @@ class CartesianVelocityControlNode():
       self.reset_twist()
       self.controller.onUpdate(twist_cmd=self.twist_cmd)  # stop motion
       self.controller.stop_controller()
-      print('stopped Cartesian velocity controller')
+      rospy.loginfo('stopped Cartesian velocity controller')
 
   
 

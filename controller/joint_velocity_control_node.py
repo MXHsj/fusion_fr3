@@ -78,7 +78,7 @@ class JointVelocityControlNode():
       self.reset_joint_vel()
       self.controller.set_control(self.joint_vel_cmd)  # stop motion
       self.stop_controller()
-      print('stopped joint velocity controller')
+      rospy.loginfo('stopped joint velocity controller')
 
   
 if __name__ == '__main__':
